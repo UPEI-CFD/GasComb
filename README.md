@@ -32,3 +32,8 @@ and run:
 ```python ./GasComb_run.py```
         
 GUI should open and you can do your calculations.
+
+## Screenshot
+
+![GasComb screenshot](/help/images/GasComb_example1.PNG)
+
