@@ -13,7 +13,7 @@ My goal besides the reactions were also material properties of gases. It is ofte
 - Enthalpy
 - Entropy
 
-... all pressure and temperature dependant.
+... all pressure and temperature dependent.
 
 
 ## How to install and run
