@@ -33,6 +33,9 @@ and run:
         
 GUI should open and you can do your calculations.
 
+## Video
+https://youtu.be/EJFUkNUmSRU
+
 ## Screenshot
 
 ![GasComb screenshot](/help/images/GasComb_example1.PNG)
