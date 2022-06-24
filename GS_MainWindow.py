@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QMessageBox, QFileDialog, QTableWidgetItem, QWidget
+from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QMessageBox, QFileDialog, QTableWidgetItem, QWidget, QDesktopWidget
 
-from SpalGas import Ui_MainWindow
+from SpalGas import Ui_GasComb
 from SpecieseDialog import Ui_SpeciesDialog
 import pySpal
 from scipy.optimize import minimize_scalar
@@ -14,7 +14,7 @@ from UI_SpeDlg import UI_SpeDlg
 from TabPageStream import TabPageStream
 
 
-class GS_MainWindow(QMainWindow, Ui_MainWindow):
+class GS_MainWindow(QMainWindow, Ui_GasComb):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
@@ -29,7 +29,7 @@ class GS_MainWindow(QMainWindow, Ui_MainWindow):
 
         # self.tabs = self.tabWidget_2
         button = QtWidgets.QToolButton()
-        button.setToolTip('Add New Tab')
+        button.setToolTip('Add New Stream')
         button.clicked.connect(self.addNewTab)
         button.setIcon(self.style().standardIcon(
             QtWidgets.QStyle.SP_DialogYesButton))
@@ -47,6 +47,15 @@ class GS_MainWindow(QMainWindow, Ui_MainWindow):
         self.lineEdit_P_in.setValidator(validator)
         self.lineEdit_RH_in.setValidator(validator)
         # self.lineEdit_3.setValidator(QtGui.QDoubleValidator(self))
+        #Move window to center of the screen
+        self.center()
+
+    def center(self):
+        #Move window to center of the screen
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
 
     def connectSignalsSlots(self):
         
@@ -131,6 +140,7 @@ class GS_MainWindow(QMainWindow, Ui_MainWindow):
         self.lineEdit_density.setText("{:.4f}".format(spaliny.density))
         self.lineEdit_visc.setText("{:.4g}".format(spaliny.viscosity))
         self.lineEdit_cp.setText("{:.2f}".format(spaliny.cp))
+        self.lineEdit_conduct.setText("{:.4f}".format(spaliny.thermal_conductivity))
 
         # Table Real
         self.tableWidget_Real.setRowCount(len(spaliny.X))
@@ -147,7 +157,11 @@ class GS_MainWindow(QMainWindow, Ui_MainWindow):
         spaliny.TP = 273.15, 101325
         self.lineEdit_VfN.setText("{:.2f}".format(spaliny.mass/spaliny.density))
         spaliny.TP = t, p
-
+        
+        #Real Raw output
+        self.plainTextEdit_realTxt.clear()
+        self.plainTextEdit_realTxt.insertPlainText(spaliny.report(show_thermo=True))
+        
         # Table Dry
         pySpal.set_water_X(spaliny, 0)
         # print(spaliny.report())
@@ -160,6 +174,10 @@ class GS_MainWindow(QMainWindow, Ui_MainWindow):
             self.tableWidget_Dry.setItem(
                 i, 2, QTableWidgetItem("{:.6f}".format(s[2])))
         self.tableWidget_Dry.sortItems(1, QtCore.Qt.DescendingOrder)
+
+        #Dry Raw output
+        self.plainTextEdit_dryTxt.clear()
+        self.plainTextEdit_dryTxt.insertPlainText(spaliny.report(show_thermo=True))
 
         # Table Reference O2
         o2_ref = float(self.lineEdit_3.text())/100
@@ -277,7 +295,7 @@ oxydizer and other streams are fuels.")
             t1 = float(t.lineEdit_T_in.text())+273.15
             mf1 = float(t.lineEdit_Flow_in.text())
             p1 = float(t.lineEdit_P_in.text())
-            rh = float(t.lineEdit_RH_in.text())
+            # rh = float(t.lineEdit_RH_in.text())
 
             # Read data from table of species concetration
             tw = t.tableWidget_In1
@@ -307,6 +325,20 @@ oxydizer and other streams are fuels.")
             rh = t.lineEdit_RH_in.text()
             if rh != "0":
                 pySpal.set_water_phi(spaliny, float(rh)/100)
+                h2o_x = spaliny.X[spaliny.species_index("H2O")]
+                h2o_item = tw.findItems("H2O", QtCore.Qt.MatchExactly)
+                
+                if h2o_item:
+                    row = h2o_item[0].row()
+                    tw.item(row,1).setText("{:.4f}".format(h2o_x))
+                else:
+                    #Add missing H2O species to the end of the table
+                    tw.insertRow(tw.rowCount()) 
+                    item = QtWidgets.QTableWidgetItem("H2O")
+                    tw.setItem(tw.rowCount()-1, 0, item)
+                    item = QtWidgets.QTableWidgetItem("{:.4f}".format(h2o_x))
+                    tw.setItem(tw.rowCount()-1, 1, item)
+                    
 
             t.plainTextEdit_Stream1_out.clear()
             t.plainTextEdit_Stream1_out.insertPlainText(spaliny.report())

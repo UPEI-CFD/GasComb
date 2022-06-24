@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindow</class>
+ <class>GasComb</class>
  <widget class="QMainWindow" name="GasComb">
   <property name="geometry">
    <rect>
@@ -245,6 +245,11 @@
                 <layout class="QVBoxLayout" name="verticalLayout_10">
                  <item>
                   <widget class="QPlainTextEdit" name="plainTextEdit_Stream1_out">
+                   <property name="font">
+                    <font>
+                     <pointsize>9</pointsize>
+                    </font>
+                   </property>
                    <property name="styleSheet">
                     <string notr="true">background-color: rgb(240, 240, 240);</string>
                    </property>
@@ -351,6 +356,16 @@
             </property>
            </widget>
           </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="lineEdit_tepl">
+            <property name="text">
+             <string>0</string>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
           <item row="1" column="0">
            <widget class="QLabel" name="label_4">
             <property name="text">
@@ -358,17 +373,20 @@
             </property>
            </widget>
           </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="lineEdit_mf">
+            <property name="text">
+             <string>0</string>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
           <item row="2" column="0">
            <widget class="QLabel" name="label_7">
             <property name="text">
              <string>Volume Flow Rate [m3/h]</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_8">
-            <property name="text">
-             <string>Volume Flow Rate [Nm3/h]</string>
             </property>
            </widget>
           </item>
@@ -385,31 +403,18 @@
             </property>
            </widget>
           </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_8">
+            <property name="text">
+             <string>Volume Flow Rate [Nm3/h]</string>
+            </property>
+           </widget>
+          </item>
           <item row="3" column="1">
            <widget class="QLineEdit" name="lineEdit_VfN">
             <property name="toolTip">
              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Volume flow rate at normal conditions: 0 °C, 101 325 Pa.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
-            <property name="text">
-             <string>0</string>
-            </property>
-            <property name="readOnly">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLineEdit" name="lineEdit_mf">
-            <property name="text">
-             <string>0</string>
-            </property>
-            <property name="readOnly">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLineEdit" name="lineEdit_tepl">
             <property name="text">
              <string>0</string>
             </property>
@@ -425,13 +430,6 @@
             </property>
            </widget>
           </item>
-          <item row="5" column="0">
-           <widget class="QLabel" name="label_5">
-            <property name="text">
-             <string>Dynamic Viscosity [Pa-s]</string>
-            </property>
-           </widget>
-          </item>
           <item row="4" column="1">
            <widget class="QLineEdit" name="lineEdit_density">
             <property name="text">
@@ -439,6 +437,13 @@
             </property>
             <property name="readOnly">
              <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="label_5">
+            <property name="text">
+             <string>Dynamic Viscosity [Pa-s]</string>
             </property>
            </widget>
           </item>
@@ -469,6 +474,23 @@
             </property>
            </widget>
           </item>
+          <item row="7" column="0">
+           <widget class="QLabel" name="label_15">
+            <property name="text">
+             <string>Thermal Conductivity [W/m-K]</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="1">
+           <widget class="QLineEdit" name="lineEdit_conduct">
+            <property name="text">
+             <string>0</string>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>
@@ -488,7 +510,7 @@
        <item>
         <widget class="QTabWidget" name="tabWidget">
          <property name="currentIndex">
-          <number>0</number>
+          <number>3</number>
          </property>
          <widget class="QWidget" name="tab_real">
           <attribute name="title">
@@ -571,6 +593,31 @@
            </item>
           </layout>
          </widget>
+         <widget class="QWidget" name="tab_real_txt">
+          <attribute name="title">
+           <string>Real (raw)</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout_8">
+           <item>
+            <widget class="QPlainTextEdit" name="plainTextEdit_realTxt">
+             <property name="font">
+              <font>
+               <pointsize>10</pointsize>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(240, 240, 240);</string>
+             </property>
+             <property name="lineWrapMode">
+              <enum>QPlainTextEdit::NoWrap</enum>
+             </property>
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
          <widget class="QWidget" name="tab_Dry">
           <attribute name="title">
            <string>Dry</string>
@@ -648,6 +695,31 @@
                </font>
               </property>
              </column>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tab_2">
+          <attribute name="title">
+           <string>Dry (raw)</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout_9">
+           <item>
+            <widget class="QPlainTextEdit" name="plainTextEdit_dryTxt">
+             <property name="font">
+              <font>
+               <pointsize>10</pointsize>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(240, 240, 240);</string>
+             </property>
+             <property name="lineWrapMode">
+              <enum>QPlainTextEdit::NoWrap</enum>
+             </property>
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
             </widget>
            </item>
           </layout>
@@ -832,7 +904,7 @@
   <connection>
    <sender>pushButtonCalculate</sender>
    <signal>clicked()</signal>
-   <receiver>MainWindow</receiver>
+   <receiver>GasComb</receiver>
    <slot>calculateButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -848,7 +920,7 @@
   <connection>
    <sender>pushButton_Lambda</sender>
    <signal>clicked()</signal>
-   <receiver>MainWindow</receiver>
+   <receiver>GasComb</receiver>
    <slot>lambdaButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -864,7 +936,7 @@
   <connection>
    <sender>pushButtonEval_in</sender>
    <signal>clicked()</signal>
-   <receiver>MainWindow</receiver>
+   <receiver>GasComb</receiver>
    <slot>evalInButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -880,7 +952,7 @@
   <connection>
    <sender>actionClose</sender>
    <signal>triggered()</signal>
-   <receiver>MainWindow</receiver>
+   <receiver>GasComb</receiver>
    <slot>close()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -896,7 +968,7 @@
   <connection>
    <sender>pushButtonSpecies</sender>
    <signal>clicked()</signal>
-   <receiver>MainWindow</receiver>
+   <receiver>GasComb</receiver>
    <slot>speciesButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -912,7 +984,7 @@
   <connection>
    <sender>pushButtonSetNG</sender>
    <signal>clicked()</signal>
-   <receiver>MainWindow</receiver>
+   <receiver>GasComb</receiver>
    <slot>NGButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -928,7 +1000,7 @@
   <connection>
    <sender>pushButtonSetAir</sender>
    <signal>clicked()</signal>
-   <receiver>MainWindow</receiver>
+   <receiver>GasComb</receiver>
    <slot>airButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">

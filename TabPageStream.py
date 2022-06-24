@@ -3,7 +3,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QTableWidgetItem, QWidget
 
-
+from UI_SpeDlg import UI_SpeDlg
 
 
 class TabPageStream(QWidget):
@@ -95,6 +95,10 @@ class TabPageStream(QWidget):
         self.plainTextEdit_Stream1_out.setReadOnly(True)
         self.plainTextEdit_Stream1_out.setObjectName(
             "plainTextEdit_Stream1_out")
+        font = QtGui.QFont()
+        font.setPointSize(9)
+        self.plainTextEdit_Stream1_out.setFont(font)
+        
         self.verticalLayout_10.addWidget(self.plainTextEdit_Stream1_out)
         self.verticalLayout_9.addWidget(self.groupBox)
         parent.tabWidget_2.addTab(self.tab, "xx")

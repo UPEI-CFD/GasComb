@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWidgets import QWidget
 
 
@@ -24,7 +24,10 @@ class TabPageMix(QWidget):
         self.verticalLayout_11.addWidget(self.plainTextEdit_Mix_in)
         self.verticalLayout_12.addWidget(self.groupBox_7)
         parent.tabWidget_2.addTab(self.tab_Mix, "")
-
+        font = QtGui.QFont()
+        font.setPointSize(9)
+        self.plainTextEdit_Mix_in.setFont(font)
+        
         self.retranslateUi(parent)
 
     def retranslateUi(self, MainWindow):
