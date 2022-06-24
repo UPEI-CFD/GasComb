@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 
+"""
+File is part of GasComb software. See licence file of the project.
+Copyright 2022 Jiri Vondal
+"""
+__author__ = "Jiří Vondál"
+__copyright__ = "Copyright 2022, Jiri Vondal"
+
 import sys
 from PyQt5 import  QtWidgets
 from PyQt5.QtWidgets import QApplication, QMainWindow

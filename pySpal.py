@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Mar  3 13:50:45 2020
 
-@author: Jiri Vondal
+"""
+File is part of GasComb software. See licence file of the project.
+Copyright 2022 Jiri Vondal
 """
 
 import cantera as ct

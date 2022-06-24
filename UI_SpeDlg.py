@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
 
+"""
+File is part of GasComb software. See licence file of the project.
+Copyright 2022 Jiri Vondal
+"""
+
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QDialog, QTableWidgetItem
 
