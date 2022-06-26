@@ -18,6 +18,7 @@ from TabPageMix import TabPageMix
 from UI_SpeDlg import UI_SpeDlg
 from TabPageStream import TabPageStream
 
+import cantera as ct
 
 class GS_MainWindow(QMainWindow, Ui_GasComb):
     def __init__(self, parent=None):
@@ -54,6 +55,8 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
         # self.lineEdit_3.setValidator(QtGui.QDoubleValidator(self))
         #Move window to center of the screen
         self.center()
+        #Switch if mechanism contains transport properties 'Multi'
+        self.transport = True
 
     def center(self):
         #Move window to center of the screen
@@ -111,16 +114,36 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
         dialog.exec()
 
     def airButtonClicked(self):
+        
+        mechFile = self.comboBoxMechFile.currentText()
+        spes = [n.name for n in pySpal.ct.Species.listFromFile(mechFile)]
+        
         # Clear old rows
         self.tableWidget_In1.setRowCount(0)
         spe_sel = {'O2': 0.2095, 'N2': 0.7809,
                    'Ar': 0.0093, 'CO2': 0.0003, 'H2O': 0}
         # Put species to table in Main Window
-        self.tableWidget_In1.setRowCount(len(spe_sel))
-        # print("Row count:", len(spe_sel)+1)
-        for i, (k, v) in enumerate(spe_sel.items()):
-            self.tableWidget_In1.setItem(i, 0, QTableWidgetItem(k))
-            self.tableWidget_In1.setItem(i, 1, QTableWidgetItem(str(v)))
+        j=0
+        for (k, v) in spe_sel.items():
+            if k in spes:
+                rowCount = self.tableWidget_In1.rowCount()
+                self.tableWidget_In1.insertRow(rowCount)
+                self.tableWidget_In1.setItem(j, 0, QTableWidgetItem(k))
+                self.tableWidget_In1.setItem(j, 1, QTableWidgetItem(str(v)))
+                j+=1
+                
+        # Read data from table of species concetration
+        tw = self.tableWidget_In1
+        allRows = tw.rowCount()
+        sps = []
+        for row in range(allRows):
+            sps.append(float(tw.item(row, 1).text()))
+        #Correction for missing spescies - renormalization of sum to 1
+        tot=sum(sps)
+        sps=[n/tot for n in sps]
+        for i,s in enumerate(sps):
+            self.tableWidget_In1.setItem(i, 1, QTableWidgetItem("{:.4f}".format(s)))
+            
 
     def NGButtonClicked(self):
         # Clear old rows
@@ -137,15 +160,25 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
         # self.notImplemented_Msg()
         spaliny = self.evalInButtonClicked()
 
-        spaliny.equilibrate("HP")
+        try:
+            spaliny.equilibrate("HP")
+        except ct.CanteraError as err:
+            print (err)
+            print ("Stopping calculation - correct the error and run again!")
+            QMessageBox.warning(self, "Error", "{0}\n{1}".format(err,"Stopping calculation - correct the error and run again!"))
+            return 
 
         self.lineEdit_tepl.setText("{:.2f}".format(spaliny.T-273.15))
         self.lineEdit_mf.setText("{:.3f}".format(spaliny.mass))
         self.lineEdit_Vf.setText("{:.2f}".format(spaliny.mass/spaliny.density))
         self.lineEdit_density.setText("{:.4f}".format(spaliny.density))
-        self.lineEdit_visc.setText("{:.4g}".format(spaliny.viscosity))
         self.lineEdit_cp.setText("{:.2f}".format(spaliny.cp))
-        self.lineEdit_conduct.setText("{:.4f}".format(spaliny.thermal_conductivity))
+        if self.transport:
+            self.lineEdit_visc.setText("{:.4g}".format(spaliny.viscosity))
+            self.lineEdit_conduct.setText("{:.4f}".format(spaliny.thermal_conductivity))
+        else:
+            self.lineEdit_visc.setText("-")
+            self.lineEdit_conduct.setText("-")
 
         # Table Real
         self.tableWidget_Real.setRowCount(len(spaliny.X))
@@ -186,16 +219,22 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
 
         # Table Reference O2
         o2_ref = float(self.lineEdit_3.text())/100
-        pySpal.set_O2_ref_X(spaliny, o2_ref)
-        self.tableWidget_RefO2.setRowCount(len(spaliny.X))
-        for i, s in enumerate(zip(spaliny.species_names, spaliny.X, spaliny.Y)):
-            # print(s[0],s[1])
-            self.tableWidget_RefO2.setItem(i, 0, QTableWidgetItem(s[0]))
-            self.tableWidget_RefO2.setItem(
-                i, 1, QTableWidgetItem("{:.6f}".format(s[1])))
-            self.tableWidget_RefO2.setItem(
-                i, 2, QTableWidgetItem("{:.6f}".format(s[2])))
-        self.tableWidget_RefO2.sortItems(1, QtCore.Qt.DescendingOrder)
+        try:
+            pySpal.set_O2_ref_X(spaliny, o2_ref)
+            self.tableWidget_RefO2.setRowCount(len(spaliny.X))
+            for i, s in enumerate(zip(spaliny.species_names, spaliny.X, spaliny.Y)):
+                # print(s[0],s[1])
+                self.tableWidget_RefO2.setItem(i, 0, QTableWidgetItem(s[0]))
+                self.tableWidget_RefO2.setItem(
+                    i, 1, QTableWidgetItem("{:.6f}".format(s[1])))
+                self.tableWidget_RefO2.setItem(
+                    i, 2, QTableWidgetItem("{:.6f}".format(s[2])))
+            self.tableWidget_RefO2.sortItems(1, QtCore.Qt.DescendingOrder)
+        except ct.CanteraError as err:
+            print (err)
+            print ("Cannot calculate with reference O2 - correct the error and run again!")
+            QMessageBox.warning(self, "Error", "{0}\n{1}".format(err,"Cannot calculate with reference O2 - correct the error and run again!"))
+            pass 
 
     def get_lmbd(self, streams, mass_ox):
         streams[0].mass = mass_ox
@@ -243,7 +282,13 @@ oxydizer and other streams are fuels.")
 
             # Set the cantera object of the first gas stream
             # TODO Check if Multi option exists for other mechanism files
-            gas1 = pySpal.ct.Solution(mechFile, transport_model='Multi')
+            try:
+                gas1 = pySpal.ct.Solution(mechFile, transport_model='Multi')
+                self.transport = True
+            except ct.CanteraError as err:
+                print (err)
+                gas1 = pySpal.ct.Solution(mechFile, name="gas")
+                self.transport = False
             spaliny = pySpal.ct.Quantity(gas1, constant='HP')
             if t.checkBox_VolFr_in.isChecked() == True:
                 spaliny.TPX = t1, p1, spe_conc
@@ -312,7 +357,14 @@ oxydizer and other streams are fuels.")
 
             # Set the cantera object of the first gas stream
             # TODO Check if Multi option exists for other mechanism files
-            gas1 = pySpal.ct.Solution(mechFile, transport_model='Multi')
+            try:
+                gas1 = pySpal.ct.Solution(mechFile, transport_model='Multi')
+                self.transport = True
+            except ct.CanteraError as err:
+                print (err)
+                gas1 = pySpal.ct.Solution(mechFile, name="gas")
+                self.transport = False
+                
             spaliny = pySpal.ct.Quantity(gas1, constant='HP')
             if t.checkBox_VolFr_in.isChecked() == True:
                 spaliny.TPX = t1, p1, spe_conc
@@ -329,7 +381,14 @@ oxydizer and other streams are fuels.")
 
             rh = t.lineEdit_RH_in.text()
             if rh != "0":
-                pySpal.set_water_phi(spaliny, float(rh)/100)
+                try:
+                    pySpal.set_water_phi(spaliny, float(rh)/100)
+                except ct.CanteraError as err:
+                    print (err)
+                    print ("Stopping calculation - correct the error and run again!")
+                    QMessageBox.warning(self, "Error", "{0}\n{1}".format(err,"Stopping calculation - correct the error and run again!"))
+                    
+                    return 
                 h2o_x = spaliny.X[spaliny.species_index("H2O")]
                 h2o_item = tw.findItems("H2O", QtCore.Qt.MatchExactly)
                 
@@ -351,10 +410,20 @@ oxydizer and other streams are fuels.")
 
         Mix = streams[0]
         for s in streams[1:]:
-            Mix += s
+            try:
+                Mix += s
+            except ZeroDivisionError as err:
+                print (err)
+                print ("Check Mass or Volume flow rate for all streams!")
+                QMessageBox.warning(self, "Error", "{0}\n{1}".format(err,"Check Mass or Volume flow rate for all streams!"))
+                
+                return 
 
         # Calculate Air to Fuel equivalence ratio (1/equivalence ratio)
-        self.lineEdit_2.setText(str(1/Mix.equivalence_ratio()))
+        try:
+            self.lineEdit_2.setText(str(1/Mix.equivalence_ratio()))
+        except ZeroDivisionError as err:
+            self.lineEdit_2.setText("-")
 
         # Create new tab with results from two streams
         if not self.tabMix:
