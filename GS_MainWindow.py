@@ -17,6 +17,7 @@ import copy
 from TabPageMix import TabPageMix
 from UI_SpeDlg import UI_SpeDlg
 from TabPageStream import TabPageStream
+import json
 
 import cantera as ct
 
@@ -28,7 +29,10 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
         # Set list of mechanism files for combo box
         mechs = pySpal.getMechanisms()
         self.comboBoxMechFile.addItems(mechs)
-        self.comboBoxMechFile.setCurrentIndex(mechs.index("gri30.yaml"))
+        try:
+            self.comboBoxMechFile.setCurrentIndex(mechs.index("gri30.yaml"))
+        except ValueError:
+            self.comboBoxMechFile.setCurrentIndex(0)
         self.spe_sel = []
 
         self.connectSignalsSlots()
@@ -57,6 +61,7 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
         self.center()
         #Switch if mechanism contains transport properties 'Multi'
         self.transport = True
+        self.fileName = ""
 
     def center(self):
         #Move window to center of the screen
@@ -82,24 +87,104 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
         QMessageBox.warning(self, "Warning", "Not yet implemented")
 
     def getFile(self):
-        self.notImplemented_Msg()
-
+        #Reads saved setup of all inputs from json file
+        # self.notImplemented_Msg()
         fname = QFileDialog.getOpenFileName(self, 'Open file',
-                                            '.\\', "Setup files (*.xml);;All files (*)")
-        if fname[0] != "":
-            print(fname)
+                                            '.\\', "Setup files (*.json);;All files (*)")
+        self.fileName = fname[0]
+        if self.fileName != "":
+            # print(fname)
+            with open(self.fileName) as f:
+                config = json.load(f)
+                #TODO: Check for existence in comboBox list
+                index = self.comboBoxMechFile.findText(config[0]["mechanismFile"])
+                self.comboBoxMechFile.setCurrentIndex(index)
+                self.lineEdit_2.setText(config[0]["lambda"])
+                self.lineEdit_3.setText(config[0]["refO2"])
+                
+                t = self.tabStream[0]
+                t.lineEdit_T_in.setText(str(config[1]["t1"]-273.15))
+                t.lineEdit_Flow_in.setText(str(config[1]["mf1"]))
+                t.lineEdit_P_in.setText(str(config[1]["p1"]))
+                t.lineEdit_RH_in.setText(str(config[1]["rh"]))
+                # Clear old rows
+                t.tableWidget_In1.setRowCount(0)
+                # Put species to table in Main Window
+                t.tableWidget_In1.setRowCount(config[1]["rows_no"])
+                
+                #Loop over all saved species in json file and add them to first stream tab
+                for i, (k, v) in enumerate(config[1]["species"].items()):
+                    t.tableWidget_In1.setItem(i, 0, QTableWidgetItem(k))
+                    t.tableWidget_In1.setItem(i, 1, QTableWidgetItem(str(v)))
+                
+                #For other stream tabs loop over their all species and put them to tabs
+                for i,c in enumerate(config[2:]):
+                    try:
+                        t = self.tabStream[i+1]
+                    except IndexError:
+                        self.tabStream.append(TabPageStream(self))
+                        t = self.tabStream[i+1]
+                    t.lineEdit_T_in.setText(str(c["t1"]-273.15))
+                    t.lineEdit_Flow_in.setText(str(c["mf1"]))
+                    t.lineEdit_P_in.setText(str(c["p1"]))
+                    t.lineEdit_RH_in.setText(str(c["rh"]))
+                    # Clear old rows
+                    t.tableWidget_In1.setRowCount(0)
+                    # Put species to table in Main Window
+                    t.tableWidget_In1.setRowCount(c["rows_no"])
+                    # print("Row count:", len(spe_sel)+1)
+                    for i, (k, v) in enumerate(c["species"].items()):
+                        t.tableWidget_In1.setItem(i, 0, QTableWidgetItem(k))
+                        t.tableWidget_In1.setItem(i, 1, QTableWidgetItem(str(v)))
+                
+                
         # self.le.setPixmap(QPixmap(fname))
-
+    
+    def saveToJson(self):
+        #Saves data from streams into json file 
+        datas = [{"mechanismFile":self.comboBoxMechFile.currentText(), \
+                  "lambda":self.lineEdit_2.text(), "refO2":self.lineEdit_3.text()}]
+        for t in self.tabStream:
+            #Loop over all Streams ans save data to list of dictionaries
+            t1 = float(t.lineEdit_T_in.text())+273.15
+            mf1 = float(t.lineEdit_Flow_in.text())
+            p1 = float(t.lineEdit_P_in.text())
+            rh = float(t.lineEdit_RH_in.text())
+            
+            # Read data from table of species concetration
+            tw = t.tableWidget_In1
+            allRows = tw.rowCount()
+            data = {"t1":t1,"mf1":mf1,"p1":p1,"rh":rh,"rows_no":allRows}
+            spe_conc = {}
+            for row in range(allRows):
+                spe_conc[tw.item(row, 0).text()] = float(
+                    tw.item(row, 1).text())
+            
+            data.update({"species":spe_conc})
+            datas.append(data)
+        
+        #Write data to file in json format
+        print(self.fileName)
+        with open(self.fileName,"w") as f:
+            json.dump(datas, f, indent=2)
+    
     def saveSetup(self):
-        self.notImplemented_Msg()
+        # self.notImplemented_Msg()
+        if not self.fileName:
+            self.saveSetup_as()
+        else:
+            self.saveToJson()
 
     def saveSetup_as(self):
-        self.notImplemented_Msg()
-
+        #self.notImplemented_Msg()
         fname = QFileDialog.getSaveFileName(self, 'Save file as',
-                                            '.\\', "Setup files (*.xml);;All files (*)")
-        if fname[0] != "":
-            print(fname)
+                                            '.\\', "Setup files (*.json);;All files (*)")
+        self.fileName = fname[0]
+        if self.fileName != "":
+            print(self.fileName)
+            self.saveToJson()
+        else:
+            QMessageBox.warning(self, "Error", "Invalid file name. Data not saved. Choose valid filename.")
 
     def about(self):
         QMessageBox.about(
