@@ -17,7 +17,9 @@ import copy
 from TabPageMix import TabPageMix
 from UI_SpeDlg import UI_SpeDlg
 from TabPageStream import TabPageStream
+import json
 
+import cantera as ct
 
 class GS_MainWindow(QMainWindow, Ui_GasComb):
     def __init__(self, parent=None):
@@ -27,7 +29,10 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
         # Set list of mechanism files for combo box
         mechs = pySpal.getMechanisms()
         self.comboBoxMechFile.addItems(mechs)
-        self.comboBoxMechFile.setCurrentIndex(mechs.index("gri30.yaml"))
+        try:
+            self.comboBoxMechFile.setCurrentIndex(mechs.index("gri30.yaml"))
+        except ValueError:
+            self.comboBoxMechFile.setCurrentIndex(0)
         self.spe_sel = []
 
         self.connectSignalsSlots()
@@ -54,6 +59,9 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
         # self.lineEdit_3.setValidator(QtGui.QDoubleValidator(self))
         #Move window to center of the screen
         self.center()
+        #Switch if mechanism contains transport properties 'Multi'
+        self.transport = True
+        self.fileName = ""
 
     def center(self):
         #Move window to center of the screen
@@ -79,24 +87,104 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
         QMessageBox.warning(self, "Warning", "Not yet implemented")
 
     def getFile(self):
-        self.notImplemented_Msg()
-
+        #Reads saved setup of all inputs from json file
+        # self.notImplemented_Msg()
         fname = QFileDialog.getOpenFileName(self, 'Open file',
-                                            '.\\', "Setup files (*.xml);;All files (*)")
-        if fname[0] != "":
-            print(fname)
+                                            '.\\', "Setup files (*.json);;All files (*)")
+        self.fileName = fname[0]
+        if self.fileName != "":
+            # print(fname)
+            with open(self.fileName) as f:
+                config = json.load(f)
+                #TODO: Check for existence in comboBox list
+                index = self.comboBoxMechFile.findText(config[0]["mechanismFile"])
+                self.comboBoxMechFile.setCurrentIndex(index)
+                self.lineEdit_2.setText(config[0]["lambda"])
+                self.lineEdit_3.setText(config[0]["refO2"])
+                
+                t = self.tabStream[0]
+                t.lineEdit_T_in.setText(str(config[1]["t1"]-273.15))
+                t.lineEdit_Flow_in.setText(str(config[1]["mf1"]))
+                t.lineEdit_P_in.setText(str(config[1]["p1"]))
+                t.lineEdit_RH_in.setText(str(config[1]["rh"]))
+                # Clear old rows
+                t.tableWidget_In1.setRowCount(0)
+                # Put species to table in Main Window
+                t.tableWidget_In1.setRowCount(config[1]["rows_no"])
+                
+                #Loop over all saved species in json file and add them to first stream tab
+                for i, (k, v) in enumerate(config[1]["species"].items()):
+                    t.tableWidget_In1.setItem(i, 0, QTableWidgetItem(k))
+                    t.tableWidget_In1.setItem(i, 1, QTableWidgetItem(str(v)))
+                
+                #For other stream tabs loop over their all species and put them to tabs
+                for i,c in enumerate(config[2:]):
+                    try:
+                        t = self.tabStream[i+1]
+                    except IndexError:
+                        self.tabStream.append(TabPageStream(self))
+                        t = self.tabStream[i+1]
+                    t.lineEdit_T_in.setText(str(c["t1"]-273.15))
+                    t.lineEdit_Flow_in.setText(str(c["mf1"]))
+                    t.lineEdit_P_in.setText(str(c["p1"]))
+                    t.lineEdit_RH_in.setText(str(c["rh"]))
+                    # Clear old rows
+                    t.tableWidget_In1.setRowCount(0)
+                    # Put species to table in Main Window
+                    t.tableWidget_In1.setRowCount(c["rows_no"])
+                    # print("Row count:", len(spe_sel)+1)
+                    for i, (k, v) in enumerate(c["species"].items()):
+                        t.tableWidget_In1.setItem(i, 0, QTableWidgetItem(k))
+                        t.tableWidget_In1.setItem(i, 1, QTableWidgetItem(str(v)))
+                
+                
         # self.le.setPixmap(QPixmap(fname))
-
+    
+    def saveToJson(self):
+        #Saves data from streams into json file 
+        datas = [{"mechanismFile":self.comboBoxMechFile.currentText(), \
+                  "lambda":self.lineEdit_2.text(), "refO2":self.lineEdit_3.text()}]
+        for t in self.tabStream:
+            #Loop over all Streams ans save data to list of dictionaries
+            t1 = float(t.lineEdit_T_in.text())+273.15
+            mf1 = float(t.lineEdit_Flow_in.text())
+            p1 = float(t.lineEdit_P_in.text())
+            rh = float(t.lineEdit_RH_in.text())
+            
+            # Read data from table of species concetration
+            tw = t.tableWidget_In1
+            allRows = tw.rowCount()
+            data = {"t1":t1,"mf1":mf1,"p1":p1,"rh":rh,"rows_no":allRows}
+            spe_conc = {}
+            for row in range(allRows):
+                spe_conc[tw.item(row, 0).text()] = float(
+                    tw.item(row, 1).text())
+            
+            data.update({"species":spe_conc})
+            datas.append(data)
+        
+        #Write data to file in json format
+        print(self.fileName)
+        with open(self.fileName,"w") as f:
+            json.dump(datas, f, indent=2)
+    
     def saveSetup(self):
-        self.notImplemented_Msg()
+        # self.notImplemented_Msg()
+        if not self.fileName:
+            self.saveSetup_as()
+        else:
+            self.saveToJson()
 
     def saveSetup_as(self):
-        self.notImplemented_Msg()
-
+        #self.notImplemented_Msg()
         fname = QFileDialog.getSaveFileName(self, 'Save file as',
-                                            '.\\', "Setup files (*.xml);;All files (*)")
-        if fname[0] != "":
-            print(fname)
+                                            '.\\', "Setup files (*.json);;All files (*)")
+        self.fileName = fname[0]
+        if self.fileName != "":
+            print(self.fileName)
+            self.saveToJson()
+        else:
+            QMessageBox.warning(self, "Error", "Invalid file name. Data not saved. Choose valid filename.")
 
     def about(self):
         QMessageBox.about(
@@ -111,16 +199,36 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
         dialog.exec()
 
     def airButtonClicked(self):
+        
+        mechFile = self.comboBoxMechFile.currentText()
+        spes = [n.name for n in pySpal.ct.Species.listFromFile(mechFile)]
+        
         # Clear old rows
         self.tableWidget_In1.setRowCount(0)
         spe_sel = {'O2': 0.2095, 'N2': 0.7809,
                    'Ar': 0.0093, 'CO2': 0.0003, 'H2O': 0}
         # Put species to table in Main Window
-        self.tableWidget_In1.setRowCount(len(spe_sel))
-        # print("Row count:", len(spe_sel)+1)
-        for i, (k, v) in enumerate(spe_sel.items()):
-            self.tableWidget_In1.setItem(i, 0, QTableWidgetItem(k))
-            self.tableWidget_In1.setItem(i, 1, QTableWidgetItem(str(v)))
+        j=0
+        for (k, v) in spe_sel.items():
+            if k in spes:
+                rowCount = self.tableWidget_In1.rowCount()
+                self.tableWidget_In1.insertRow(rowCount)
+                self.tableWidget_In1.setItem(j, 0, QTableWidgetItem(k))
+                self.tableWidget_In1.setItem(j, 1, QTableWidgetItem(str(v)))
+                j+=1
+                
+        # Read data from table of species concetration
+        tw = self.tableWidget_In1
+        allRows = tw.rowCount()
+        sps = []
+        for row in range(allRows):
+            sps.append(float(tw.item(row, 1).text()))
+        #Correction for missing spescies - renormalization of sum to 1
+        tot=sum(sps)
+        sps=[n/tot for n in sps]
+        for i,s in enumerate(sps):
+            self.tableWidget_In1.setItem(i, 1, QTableWidgetItem("{:.4f}".format(s)))
+            
 
     def NGButtonClicked(self):
         # Clear old rows
@@ -137,15 +245,25 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
         # self.notImplemented_Msg()
         spaliny = self.evalInButtonClicked()
 
-        spaliny.equilibrate("HP")
+        try:
+            spaliny.equilibrate("HP")
+        except ct.CanteraError as err:
+            print (err)
+            print ("Stopping calculation - correct the error and run again!")
+            QMessageBox.warning(self, "Error", "{0}\n{1}".format(err,"Stopping calculation - correct the error and run again!"))
+            return 
 
         self.lineEdit_tepl.setText("{:.2f}".format(spaliny.T-273.15))
         self.lineEdit_mf.setText("{:.3f}".format(spaliny.mass))
         self.lineEdit_Vf.setText("{:.2f}".format(spaliny.mass/spaliny.density))
         self.lineEdit_density.setText("{:.4f}".format(spaliny.density))
-        self.lineEdit_visc.setText("{:.4g}".format(spaliny.viscosity))
         self.lineEdit_cp.setText("{:.2f}".format(spaliny.cp))
-        self.lineEdit_conduct.setText("{:.4f}".format(spaliny.thermal_conductivity))
+        if self.transport:
+            self.lineEdit_visc.setText("{:.4g}".format(spaliny.viscosity))
+            self.lineEdit_conduct.setText("{:.4f}".format(spaliny.thermal_conductivity))
+        else:
+            self.lineEdit_visc.setText("-")
+            self.lineEdit_conduct.setText("-")
 
         # Table Real
         self.tableWidget_Real.setRowCount(len(spaliny.X))
@@ -186,16 +304,22 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
 
         # Table Reference O2
         o2_ref = float(self.lineEdit_3.text())/100
-        pySpal.set_O2_ref_X(spaliny, o2_ref)
-        self.tableWidget_RefO2.setRowCount(len(spaliny.X))
-        for i, s in enumerate(zip(spaliny.species_names, spaliny.X, spaliny.Y)):
-            # print(s[0],s[1])
-            self.tableWidget_RefO2.setItem(i, 0, QTableWidgetItem(s[0]))
-            self.tableWidget_RefO2.setItem(
-                i, 1, QTableWidgetItem("{:.6f}".format(s[1])))
-            self.tableWidget_RefO2.setItem(
-                i, 2, QTableWidgetItem("{:.6f}".format(s[2])))
-        self.tableWidget_RefO2.sortItems(1, QtCore.Qt.DescendingOrder)
+        try:
+            pySpal.set_O2_ref_X(spaliny, o2_ref)
+            self.tableWidget_RefO2.setRowCount(len(spaliny.X))
+            for i, s in enumerate(zip(spaliny.species_names, spaliny.X, spaliny.Y)):
+                # print(s[0],s[1])
+                self.tableWidget_RefO2.setItem(i, 0, QTableWidgetItem(s[0]))
+                self.tableWidget_RefO2.setItem(
+                    i, 1, QTableWidgetItem("{:.6f}".format(s[1])))
+                self.tableWidget_RefO2.setItem(
+                    i, 2, QTableWidgetItem("{:.6f}".format(s[2])))
+            self.tableWidget_RefO2.sortItems(1, QtCore.Qt.DescendingOrder)
+        except ct.CanteraError as err:
+            print (err)
+            print ("Cannot calculate with reference O2 - correct the error and run again!")
+            QMessageBox.warning(self, "Error", "{0}\n{1}".format(err,"Cannot calculate with reference O2 - correct the error and run again!"))
+            pass 
 
     def get_lmbd(self, streams, mass_ox):
         streams[0].mass = mass_ox
@@ -243,7 +367,13 @@ oxydizer and other streams are fuels.")
 
             # Set the cantera object of the first gas stream
             # TODO Check if Multi option exists for other mechanism files
-            gas1 = pySpal.ct.Solution(mechFile, transport_model='Multi')
+            try:
+                gas1 = pySpal.ct.Solution(mechFile, transport_model='Multi')
+                self.transport = True
+            except ct.CanteraError as err:
+                print (err)
+                gas1 = pySpal.ct.Solution(mechFile, name="gas")
+                self.transport = False
             spaliny = pySpal.ct.Quantity(gas1, constant='HP')
             if t.checkBox_VolFr_in.isChecked() == True:
                 spaliny.TPX = t1, p1, spe_conc
@@ -312,7 +442,14 @@ oxydizer and other streams are fuels.")
 
             # Set the cantera object of the first gas stream
             # TODO Check if Multi option exists for other mechanism files
-            gas1 = pySpal.ct.Solution(mechFile, transport_model='Multi')
+            try:
+                gas1 = pySpal.ct.Solution(mechFile, transport_model='Multi')
+                self.transport = True
+            except ct.CanteraError as err:
+                print (err)
+                gas1 = pySpal.ct.Solution(mechFile, name="gas")
+                self.transport = False
+                
             spaliny = pySpal.ct.Quantity(gas1, constant='HP')
             if t.checkBox_VolFr_in.isChecked() == True:
                 spaliny.TPX = t1, p1, spe_conc
@@ -329,7 +466,14 @@ oxydizer and other streams are fuels.")
 
             rh = t.lineEdit_RH_in.text()
             if rh != "0":
-                pySpal.set_water_phi(spaliny, float(rh)/100)
+                try:
+                    pySpal.set_water_phi(spaliny, float(rh)/100)
+                except ct.CanteraError as err:
+                    print (err)
+                    print ("Stopping calculation - correct the error and run again!")
+                    QMessageBox.warning(self, "Error", "{0}\n{1}".format(err,"Stopping calculation - correct the error and run again!"))
+                    
+                    return 
                 h2o_x = spaliny.X[spaliny.species_index("H2O")]
                 h2o_item = tw.findItems("H2O", QtCore.Qt.MatchExactly)
                 
@@ -351,10 +495,20 @@ oxydizer and other streams are fuels.")
 
         Mix = streams[0]
         for s in streams[1:]:
-            Mix += s
+            try:
+                Mix += s
+            except ZeroDivisionError as err:
+                print (err)
+                print ("Check Mass or Volume flow rate for all streams!")
+                QMessageBox.warning(self, "Error", "{0}\n{1}".format(err,"Check Mass or Volume flow rate for all streams!"))
+                
+                return 
 
         # Calculate Air to Fuel equivalence ratio (1/equivalence ratio)
-        self.lineEdit_2.setText(str(1/Mix.equivalence_ratio()))
+        try:
+            self.lineEdit_2.setText(str(1/Mix.equivalence_ratio()))
+        except ZeroDivisionError as err:
+            self.lineEdit_2.setText("-")
 
         # Create new tab with results from two streams
         if not self.tabMix:

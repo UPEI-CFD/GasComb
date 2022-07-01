@@ -9,6 +9,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QTableWidgetItem, QWidget
 
 from UI_SpeDlg import UI_SpeDlg
+import pySpal
 
 
 class TabPageStream(QWidget):
@@ -128,16 +129,35 @@ class TabPageStream(QWidget):
         dialog.exec()
 
     def airButtonClicked(self):
+        mechFile = self.parent.comboBoxMechFile.currentText()
+        spes = [n.name for n in pySpal.ct.Species.listFromFile(mechFile)]
+        
         # Clear old rows
         self.tableWidget_In1.setRowCount(0)
         spe_sel = {'O2': 0.2095, 'N2': 0.7809,
                    'Ar': 0.0093, 'CO2': 0.0003, 'H2O': 0}
         # Put species to table in Main Window
-        self.tableWidget_In1.setRowCount(len(spe_sel))
-        print("Row count:", len(spe_sel)+1)
-        for i, (k, v) in enumerate(spe_sel.items()):
-            self.tableWidget_In1.setItem(i, 0, QTableWidgetItem(k))
-            self.tableWidget_In1.setItem(i, 1, QTableWidgetItem(str(v)))
+        j=0
+        for (k, v) in spe_sel.items():
+            if k in spes:
+                rowCount = self.tableWidget_In1.rowCount()
+                self.tableWidget_In1.insertRow(rowCount)
+                self.tableWidget_In1.setItem(j, 0, QTableWidgetItem(k))
+                self.tableWidget_In1.setItem(j, 1, QTableWidgetItem(str(v)))
+                j+=1
+                
+        # Read data from table of species concetration
+        tw = self.tableWidget_In1
+        allRows = tw.rowCount()
+        sps = []
+        for row in range(allRows):
+            sps.append(float(tw.item(row, 1).text()))
+        #Correction for missing spescies - renormalization of sum to 1
+        tot=sum(sps)
+        sps=[n/tot for n in sps]
+        for i,s in enumerate(sps):
+            self.tableWidget_In1.setItem(i, 1, QTableWidgetItem("{:.4f}".format(s)))
+        
 
     def NGButtonClicked(self):
         # Clear old rows
