@@ -34,7 +34,9 @@ and run:
 GUI should open and you can do your calculations.
 
 ## Video
-https://youtu.be/EJFUkNUmSRU
+Introduction 1: https://youtu.be/EJFUkNUmSRU
+Introduction 2: https://youtu.be/e_cZFs-iPAw
+Material Properties: https://youtu.be/HktMvOGQKXY
 
 ## Screenshot
 
