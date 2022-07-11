@@ -124,8 +124,9 @@ class TabPageStream(QWidget):
 
     def speciesButtonClicked(self):
         # print(self.parent.comboBoxMechFile.currentText())
+        
         dialog = UI_SpeDlg(
-            self.parent.comboBoxMechFile.currentText(), self.parent)
+            self.parent.comboBoxMechFile.currentText(), self.parent.purefluids, self, self.parent)
         dialog.exec()
 
     def airButtonClicked(self):

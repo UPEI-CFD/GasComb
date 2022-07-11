@@ -27,7 +27,8 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
         self.setupUi(self)
 
         # Set list of mechanism files for combo box
-        mechs = pySpal.getMechanisms()
+        self.purefluids = ["CarbonDioxide","Heptane","Hydrogen","Methane","Nitrogen","Oxygen","Water"]
+        mechs = self.purefluids + pySpal.getMechanisms()
         self.comboBoxMechFile.addItems(mechs)
         try:
             self.comboBoxMechFile.setCurrentIndex(mechs.index("gri30.yaml"))
@@ -47,6 +48,7 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
         # self.addNewTab()   PE_IndicatorSpinPlus SP_DialogYesButton
         self.tabMix = None
         self.tabStream = [self]
+        #self.tabStream = [TabPageStream(self)]
         
         validator1 = QtGui.QRegExpValidator(QtCore.QRegExp(r'[+-]?(\d+([.]\d*)?([eE][+-]?\d+)?|[.]\d+([eE][+-]?\d+)?)'))
         self.lineEdit_T_in.setValidator(validator1)
@@ -74,8 +76,11 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
         
         self.actionAbout.triggered.connect(self.about)
         self.actionOpen.triggered.connect(self.getFile)
+        self.actionOpen.setShortcut(QtGui.QKeySequence("Ctrl+O"))
         self.actionSave.triggered.connect(self.saveSetup)
+        self.actionSave.setShortcut(QtGui.QKeySequence("Ctrl+S"))
         self.actionSave_as.triggered.connect(self.saveSetup_as)
+        self.actionSave_as.setShortcut(QtGui.QKeySequence("Ctrl+Shift+S"))
 
     def addNewTab(self):
         """
@@ -195,7 +200,7 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
 
     def speciesButtonClicked(self):
 
-        dialog = UI_SpeDlg(self.comboBoxMechFile.currentText(), self)
+        dialog = UI_SpeDlg(self.comboBoxMechFile.currentText(), self.purefluids, self, self) #self)
         dialog.exec()
 
     def airButtonClicked(self):
@@ -244,7 +249,36 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
     def calculateButtonClicked(self):
         # self.notImplemented_Msg()
         spaliny = self.evalInButtonClicked()
-
+        if not spaliny:
+            return
+        # Get data from user's inputs
+        mechFile = self.comboBoxMechFile.currentText()
+        
+        #------When PureFluid is selected instead of Mechanism File------
+        if mechFile in self.purefluids or mechFile == "water.yaml" or mechFile == "liquidvapor.yaml":
+            self.lineEdit_tepl.setText("{:.2f}".format(spaliny.T-273.15))
+            if not mechFile == "water.yaml":
+                self.lineEdit_mf.setText("{:.3g}".format(spaliny.mass))
+                self.lineEdit_Vf.setText("{:.2g}".format(spaliny.mass/spaliny.density))
+            else:
+                self.lineEdit_mf.setText("-")
+                self.lineEdit_Vf.setText("-")
+            self.lineEdit_density.setText("{:.4f}".format(spaliny.density))
+            self.lineEdit_cp.setText("{:.2f}".format(spaliny.cp))
+            self.lineEdit_VfN.setText("-")
+            if self.transport:
+                self.lineEdit_visc.setText("{:.4g}".format(spaliny.viscosity))
+                self.lineEdit_conduct.setText("{:.4f}".format(spaliny.thermal_conductivity))
+            else:
+                self.lineEdit_visc.setText("-")
+                self.lineEdit_conduct.setText("-")
+                
+            #Real Raw output
+            self.plainTextEdit_realTxt.clear()
+            self.plainTextEdit_realTxt.insertPlainText(spaliny.report(show_thermo=True))
+            return
+        #------------
+        
         try:
             spaliny.equilibrate("HP")
         except ct.CanteraError as err:
@@ -266,6 +300,7 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
             self.lineEdit_conduct.setText("-")
 
         # Table Real
+        self.tableWidget_Real.setRowCount(0)
         self.tableWidget_Real.setRowCount(len(spaliny.X))
         for i, s in enumerate(zip(spaliny.species_names, spaliny.X, spaliny.Y)):
             # print(s[0],s[1])
@@ -274,7 +309,7 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
                 i, 1, QTableWidgetItem("{:.6f}".format(s[1])))
             self.tableWidget_Real.setItem(
                 i, 2, QTableWidgetItem("{:.6f}".format(s[2])))
-        self.tableWidget_Real.sortItems(1, QtCore.Qt.DescendingOrder)
+        self.tableWidget_Real.sortItems(2, QtCore.Qt.DescendingOrder)
 
         t, p = spaliny.TP
         spaliny.TP = 273.15, 101325
@@ -288,6 +323,7 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
         # Table Dry
         pySpal.set_water_X(spaliny, 0)
         # print(spaliny.report())
+        self.tableWidget_Dry.setRowCount(0)
         self.tableWidget_Dry.setRowCount(len(spaliny.X))
         for i, s in enumerate(zip(spaliny.species_names, spaliny.X, spaliny.Y)):
             # print(s[0], s[1])
@@ -296,7 +332,7 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
                 i, 1, QTableWidgetItem("{:.6f}".format(s[1])))
             self.tableWidget_Dry.setItem(
                 i, 2, QTableWidgetItem("{:.6f}".format(s[2])))
-        self.tableWidget_Dry.sortItems(1, QtCore.Qt.DescendingOrder)
+        self.tableWidget_Dry.sortItems(2, QtCore.Qt.DescendingOrder)
 
         #Dry Raw output
         self.plainTextEdit_dryTxt.clear()
@@ -306,15 +342,15 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
         o2_ref = float(self.lineEdit_3.text())/100
         try:
             pySpal.set_O2_ref_X(spaliny, o2_ref)
+            self.tableWidget_RefO2.setRowCount(0)
             self.tableWidget_RefO2.setRowCount(len(spaliny.X))
             for i, s in enumerate(zip(spaliny.species_names, spaliny.X, spaliny.Y)):
-                # print(s[0],s[1])
+                #print(s[0],s[1],s[2])
                 self.tableWidget_RefO2.setItem(i, 0, QTableWidgetItem(s[0]))
                 self.tableWidget_RefO2.setItem(
                     i, 1, QTableWidgetItem("{:.6f}".format(s[1])))
-                self.tableWidget_RefO2.setItem(
-                    i, 2, QTableWidgetItem("{:.6f}".format(s[2])))
-            self.tableWidget_RefO2.sortItems(1, QtCore.Qt.DescendingOrder)
+                self.tableWidget_RefO2.setItem(i, 2, QTableWidgetItem("{:.6f}".format(s[2])))
+            self.tableWidget_RefO2.sortItems(2, QtCore.Qt.DescendingOrder)
         except ct.CanteraError as err:
             print (err)
             print ("Cannot calculate with reference O2 - correct the error and run again!")
@@ -349,7 +385,10 @@ oxydizer and other streams are fuels.")
         spaliny = ""
         streams = []
         mechFile = self.comboBoxMechFile.currentText()
-
+        if mechFile in self.purefluids or mechFile == "water.yaml" or mechFile == "liquidvapor.yaml":
+            QMessageBox.information(self, "Information", "Lambda is not relevant for Pure Fluids.")
+            return
+        
         for t in self.tabStream:
             # print (t.lineEdit_T_in.text())
             t1 = float(t.lineEdit_T_in.text())+273.15
@@ -440,54 +479,123 @@ oxydizer and other streams are fuels.")
                 spe_conc[tw.item(row, 0).text()] = float(
                     tw.item(row, 1).text())
 
-            # Set the cantera object of the first gas stream
-            # TODO Check if Multi option exists for other mechanism files
-            try:
-                gas1 = pySpal.ct.Solution(mechFile, transport_model='Multi')
-                self.transport = True
-            except ct.CanteraError as err:
-                print (err)
-                gas1 = pySpal.ct.Solution(mechFile, name="gas")
-                self.transport = False
-                
-            spaliny = pySpal.ct.Quantity(gas1, constant='HP')
-            if t.checkBox_VolFr_in.isChecked() == True:
-                spaliny.TPX = t1, p1, spe_conc
-            else:
-                spaliny.TPY = t1, p1, spe_conc
-
-            if t.comboBoxFlow1.currentText() == "Mass Flow Rate [kg/s]":
-                spaliny.mass = mf1
-            else:
-                spaliny.TP = 273.15, 101325
-                dens = spaliny.density
-                spaliny.mass = mf1*dens
-                spaliny.TP = t1, p1
-
-            rh = t.lineEdit_RH_in.text()
-            if rh != "0":
+            #------When PureFluid is selected instead of Mechanism File-----
+            if mechFile in self.purefluids:
+                if mechFile == "Water":
+                    self.transport = True
+                else:
+                    self.transport = False
+                fnct = getattr(ct,mechFile)
+                gas1 = fnct()
                 try:
-                    pySpal.set_water_phi(spaliny, float(rh)/100)
+                    gas1.TP = t1, p1
                 except ct.CanteraError as err:
                     print (err)
                     print ("Stopping calculation - correct the error and run again!")
                     QMessageBox.warning(self, "Error", "{0}\n{1}".format(err,"Stopping calculation - correct the error and run again!"))
-                    
                     return 
-                h2o_x = spaliny.X[spaliny.species_index("H2O")]
-                h2o_item = tw.findItems("H2O", QtCore.Qt.MatchExactly)
+                spaliny = pySpal.ct.Quantity(gas1, constant='HP')
                 
-                if h2o_item:
-                    row = h2o_item[0].row()
-                    tw.item(row,1).setText("{:.4f}".format(h2o_x))
+                if t.comboBoxFlow1.currentText() == "Mass Flow Rate [kg/s]":
+                    spaliny.mass = mf1
                 else:
-                    #Add missing H2O species to the end of the table
-                    tw.insertRow(tw.rowCount()) 
-                    item = QtWidgets.QTableWidgetItem("H2O")
-                    tw.setItem(tw.rowCount()-1, 0, item)
-                    item = QtWidgets.QTableWidgetItem("{:.4f}".format(h2o_x))
-                    tw.setItem(tw.rowCount()-1, 1, item)
+                    spaliny.TP = 273.15, 101325
+                    dens = spaliny.density
+                    spaliny.mass = mf1*dens
+                    spaliny.TP = t1, p1
+
+                #-------------------------------------------
+            else:    
+                # Set the cantera object of the first gas stream
+                # TODO Check if Multi option exists for other mechanism files
+                try:
+                    list(spe_conc.keys())[0]
+                except IndexError as err:
+                    print (err)
+                    print ("Stopping calculation - no species specified for a Stream!")
+                    QMessageBox.warning(self, "Error", "No species specified for a Stream!\nSpecify species in all Streams and run again.")
+                    return 
+                
+                
+                try:
+                    gas1 = pySpal.ct.Solution(mechFile, transport_model='Multi')
+                    self.transport = True
+                except ct.CanteraError as err:
+                    print (err)
+                    if mechFile == "liquidvapor.yaml":
+                        self.transport = False
+                        if list(spe_conc.keys())[0] == "H2O":
+                            gas1 = pySpal.ct.Solution(mechFile, name = "water")
+                        elif list(spe_conc.keys())[0] == "N2":
+                            gas1 = pySpal.ct.Solution(mechFile, name = "nitrogen")
+                        elif list(spe_conc.keys())[0] == "CH4":
+                            gas1 = pySpal.ct.Solution(mechFile, name = "methane")
+                        elif list(spe_conc.keys())[0] == "H2":
+                            gas1 = pySpal.ct.Solution(mechFile, name = "hydrogen")
+                        elif list(spe_conc.keys())[0] == "O2":
+                            gas1 = pySpal.ct.Solution(mechFile, name = "oxygen")
+                        elif list(spe_conc.keys())[0] == "CO2":
+                            gas1 = pySpal.ct.Solution(mechFile, name = "carbon-dioxide")
+                        elif list(spe_conc.keys())[0] == "C7H16":
+                            gas1 = pySpal.ct.Solution(mechFile, name = "heptane")
+                        elif list(spe_conc.keys())[0] == "C2F4H2":
+                            gas1 = pySpal.ct.Solution(mechFile, name = "HFC-134a")
+                        
+                    elif mechFile == "silane.yaml":
+                        gas1 = pySpal.ct.Solution(mechFile, name = "gas")
+                        self.transport = False
+                    elif mechFile == "water.yaml":
+                        self.transport = False
+                        if list(spe_conc.keys())[0] == "H2O(S)":
+                            gas1 = pySpal.ct.Solution(mechFile, name = "ice")
+                        elif list(spe_conc.keys())[0] == "H2O(L)":
+                            gas1 = pySpal.ct.Solution(mechFile, name = "liquid_water")
+                        gas1.TP = t1, p1
+                        t.plainTextEdit_Stream1_out.clear()
+                        t.plainTextEdit_Stream1_out.insertPlainText(gas1.report())                    
+                        return gas1
+                    else:
+                        gas1 = pySpal.ct.Solution(mechFile)
+                        self.transport = False
                     
+                spaliny = pySpal.ct.Quantity(gas1, constant='HP')
+                if t.checkBox_VolFr_in.isChecked() == True:
+                    spaliny.TPX = t1, p1, spe_conc
+                else:
+                    spaliny.TPY = t1, p1, spe_conc
+
+                if t.comboBoxFlow1.currentText() == "Mass Flow Rate [kg/s]":
+                    spaliny.mass = mf1
+                else:
+                    spaliny.TP = 273.15, 101325
+                    dens = spaliny.density
+                    spaliny.mass = mf1*dens
+                    spaliny.TP = t1, p1
+
+                rh = t.lineEdit_RH_in.text()
+                if rh != "0":
+                    try:
+                        pySpal.set_water_phi(spaliny, float(rh)/100)
+                    except ct.CanteraError as err:
+                        print (err)
+                        print ("Stopping calculation - correct the error and run again!")
+                        QMessageBox.warning(self, "Error", "{0}\n{1}".format(err,"Stopping calculation - correct the error and run again!"))
+                        
+                        return 
+                    h2o_x = spaliny.X[spaliny.species_index("H2O")]
+                    h2o_item = tw.findItems("H2O", QtCore.Qt.MatchExactly)
+                    
+                    if h2o_item:
+                        row = h2o_item[0].row()
+                        tw.item(row,1).setText("{:.4f}".format(h2o_x))
+                    else:
+                        #Add missing H2O species to the end of the table
+                        tw.insertRow(tw.rowCount()) 
+                        item = QtWidgets.QTableWidgetItem("H2O")
+                        tw.setItem(tw.rowCount()-1, 0, item)
+                        item = QtWidgets.QTableWidgetItem("{:.4f}".format(h2o_x))
+                        tw.setItem(tw.rowCount()-1, 1, item)
+                        
 
             t.plainTextEdit_Stream1_out.clear()
             t.plainTextEdit_Stream1_out.insertPlainText(spaliny.report())
@@ -504,11 +612,12 @@ oxydizer and other streams are fuels.")
                 
                 return 
 
-        # Calculate Air to Fuel equivalence ratio (1/equivalence ratio)
-        try:
-            self.lineEdit_2.setText(str(1/Mix.equivalence_ratio()))
-        except ZeroDivisionError as err:
-            self.lineEdit_2.setText("-")
+        if not (mechFile in self.purefluids or mechFile == "water.yaml" or mechFile == "liquidvapor.yaml"):
+            # Calculate Air to Fuel equivalence ratio (1/equivalence ratio)
+            try:
+                self.lineEdit_2.setText(str(1/Mix.equivalence_ratio()))
+            except ZeroDivisionError as err:
+                self.lineEdit_2.setText("-")
 
         # Create new tab with results from two streams
         if not self.tabMix:

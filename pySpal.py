@@ -37,11 +37,15 @@ def set_water_X(gas, water_X):
     '''
     x = gas.X
     t, p = gas.TP
-    i = gas.species_index('H2O')
-    x = x*(1-water_X)/(1-x[i])  # Recalculates all species concentration.
-    x[i] = water_X  # Sets final water molar fraction value as required.
-    gas.X = x  # Assigns back species concentration to the gas.
-    gas.TP = t, p
+    try:
+        i = gas.species_index('H2O')
+        x = x*(1-water_X)/(1-x[i])  # Recalculates all species concentration.
+        x[i] = water_X  # Sets final water molar fraction value as required.
+        gas.X = x  # Assigns back species concentration to the gas.
+        gas.TP = t, p
+    except ValueError as err:
+        print (err)
+        print("Cannot calculated dry conditions - no H2O species is present!")
 
 
 def set_water_phi(gas, water_phi):

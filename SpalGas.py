@@ -427,7 +427,7 @@ class Ui_GasComb(object):
 
         self.retranslateUi(GasComb)
         self.tabWidget_2.setCurrentIndex(0)
-        self.tabWidget.setCurrentIndex(3)
+        self.tabWidget.setCurrentIndex(1)
         self.pushButtonCalculate.clicked.connect(GasComb.calculateButtonClicked)
         self.pushButton_Lambda.clicked.connect(GasComb.lambdaButtonClicked)
         self.pushButtonEval_in.clicked.connect(GasComb.evalInButtonClicked)
