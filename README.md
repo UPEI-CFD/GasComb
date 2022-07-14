@@ -15,14 +15,17 @@ My goal besides the reactions were also material properties of gases. It is ofte
 
 ... all pressure and temperature dependent.
 
+## Download
+- Standard windows installation: https://drive.google.com/file/d/1n8N4ozoeHgXyfXaJMtfWfqpS_Nl9MXkZ/view?usp=sharing
+- Portable windows installation: https://drive.google.com/file/d/1zfaSSp_Zqo0gVQqGXGhVFANOs2Gys_lY/view?usp=sharing
 
-## How to install and run
+## How to install and run with Python from source code
 1) Download and install Miniconda: https://docs.conda.io/en/latest/miniconda.html 
 2) Open Anaconda Powershell Prompt and install cantera libraries: 
 
 ```conda create --name ct-env --channel cantera cantera matplotlib pyqt```
 
-3) Create folder and download provided fiels from this repository.
+3) Create folder and download provided files from this repository.
 4) In Anaconda Powershell Prompt navigate to the folder, activate environment: 
 
 ```conda activate ct-env```
