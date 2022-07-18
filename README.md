@@ -23,7 +23,7 @@ My goal besides the reactions were also material properties of gases. It is ofte
 1) Download and install Miniconda: https://docs.conda.io/en/latest/miniconda.html 
 2) Open Anaconda Powershell Prompt and install cantera libraries: 
 
-```conda create --name ct-env --channel cantera cantera matplotlib pyqt```
+```conda create --name ct-env --channel cantera cantera matplotlib scipy pyqt```
 
 3) Create folder and download provided files from this repository.
 4) In Anaconda Powershell Prompt navigate to the folder, activate environment: 
