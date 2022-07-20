@@ -47,3 +47,6 @@ Material Properties: https://youtu.be/HktMvOGQKXY
 
 ![GasComb screenshot](/help/images/GasComb_example1.PNG)
 
+## Website
+
+https://sites.google.com/vutbr.cz/gascomb
