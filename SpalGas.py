@@ -512,7 +512,7 @@ class Ui_GasComb(object):
         self.lineEdit_density.setText(_translate("GasComb", "0"))
         self.label_5.setText(_translate("GasComb", "Dynamic Viscosity [Pa-s]"))
         self.lineEdit_visc.setText(_translate("GasComb", "0"))
-        self.label_9.setText(_translate("GasComb", "Specific Heat [kJ/kg-K]"))
+        self.label_9.setText(_translate("GasComb", "Specific Heat [J/kg-K]"))
         self.lineEdit_cp.setText(_translate("GasComb", "0"))
         self.label_15.setText(_translate("GasComb", "Thermal Conductivity [W/m-K]"))
         self.lineEdit_conduct.setText(_translate("GasComb", "0"))
