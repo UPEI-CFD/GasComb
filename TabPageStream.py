@@ -166,7 +166,7 @@ class TabPageStream(QWidget):
         spe_sel = {'CH4': 1}
         # Put species to table in Main Window
         self.tableWidget_In1.setRowCount(len(spe_sel))
-        print("Row count:", len(spe_sel)+1)
+        # print("Row count:", len(spe_sel)+1)
         for i, (k, v) in enumerate(spe_sel.items()):
             self.tableWidget_In1.setItem(i, 0, QTableWidgetItem(k))
             self.tableWidget_In1.setItem(i, 1, QTableWidgetItem(str(v)))

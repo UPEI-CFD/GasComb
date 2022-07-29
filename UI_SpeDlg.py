@@ -9,7 +9,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QDialog, QTableWidgetItem
 
 import pySpal
-from SpecieseDialog import Ui_SpeciesDialog
+from Species_dialog import Ui_SpeciesDialog
 
 class UI_SpeDlg(QDialog, Ui_SpeciesDialog):
     """Species choice dialog."""

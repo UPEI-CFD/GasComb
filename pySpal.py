@@ -173,7 +173,25 @@ def getMechanisms():
 
     return mnms
 
-license_description="""<p>GasComb v0.1</p>
+def getFlameSpeed(gas1, ratio=2, slope=0.1, curve=0.1,loglevel=1, width=0.1, auto=False):
+    
+    # Vytvoření plamene
+    flame = ct.FreeFlame(gas1, width=width)
+    flame.inlet.T =  gas1.T
+    flame.inlet.X =  gas1.X              # Conditions
+    
+    # Definice tolerancí pro řešení
+    flame.set_refine_criteria(ratio=ratio, slope=slope, curve=curve)
+    
+    flame.transport_model = 'Multi'
+    
+    flame.solve(loglevel=loglevel, auto=auto)
+    
+    # Rychlost_plamene = flame.velocity[0]
+    # print("Rychlost plamene je: {:.2f} cm/s".format(Rychlost_plamene*100))
+    return flame.velocity[0]
+
+license_description="""<p>GasComb v{}</p>
 <p>GasComb is a basic GUI for Cantera libraries and few more tools. It allows calculations of stream mixing and set the gas mixture to a state of chemical equilibrium. Mixing is assumed at constant enthalpy and pressure (HP).</p>
 
 ============================================

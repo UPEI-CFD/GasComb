@@ -231,6 +231,18 @@ class Ui_GasComb(object):
         self.lineEdit_conduct.setReadOnly(True)
         self.lineEdit_conduct.setObjectName("lineEdit_conduct")
         self.formLayout.setWidget(7, QtWidgets.QFormLayout.FieldRole, self.lineEdit_conduct)
+        
+        
+        self.label_fl = QtWidgets.QLabel(self.groupBox_5)
+        self.label_fl.setObjectName("label_fl")
+        self.formLayout.setWidget(8, QtWidgets.QFormLayout.LabelRole, self.label_fl)
+        
+        self.lineEdit_FlSp = QtWidgets.QLineEdit(self.groupBox_5)
+        self.lineEdit_FlSp.setReadOnly(True)
+        self.lineEdit_FlSp.setObjectName("lineEdit_FlSp")
+        self.formLayout.setWidget(8, QtWidgets.QFormLayout.FieldRole, self.lineEdit_FlSp)
+        
+        
         self.verticalLayout_2.addWidget(self.groupBox_5)
         self.label_6 = QtWidgets.QLabel(self.groupBox_3)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
@@ -398,6 +410,8 @@ class Ui_GasComb(object):
         self.menubar.setObjectName("menubar")
         self.menuFile = QtWidgets.QMenu(self.menubar)
         self.menuFile.setObjectName("menuFile")
+        self.menuSettings = QtWidgets.QMenu(self.menubar)
+        self.menuSettings.setObjectName("menuSettings")
         self.menuHelp = QtWidgets.QMenu(self.menubar)
         self.menuHelp.setObjectName("menuHelp")
         GasComb.setMenuBar(self.menubar)
@@ -412,14 +426,18 @@ class Ui_GasComb(object):
         self.actionSave_as.setObjectName("actionSave_as")
         self.actionClose = QtWidgets.QAction(GasComb)
         self.actionClose.setObjectName("actionClose")
+        self.actionOptions = QtWidgets.QAction(GasComb)
+        self.actionOptions.setObjectName("actionSettings")
         self.actionAbout = QtWidgets.QAction(GasComb)
         self.actionAbout.setObjectName("actionAbout")
         self.menuFile.addAction(self.actionOpen)
         self.menuFile.addAction(self.actionSave)
         self.menuFile.addAction(self.actionSave_as)
         self.menuFile.addAction(self.actionClose)
+        self.menuSettings.addAction(self.actionOptions)
         self.menuHelp.addAction(self.actionAbout)
         self.menubar.addAction(self.menuFile.menuAction())
+        self.menubar.addAction(self.menuSettings.menuAction())
         self.menubar.addAction(self.menuHelp.menuAction())
         self.label_10.setBuddy(self.lineEdit_T_in)
         self.label_13.setBuddy(self.lineEdit_P_in)
@@ -514,6 +532,11 @@ class Ui_GasComb(object):
         self.lineEdit_visc.setText(_translate("GasComb", "0"))
         self.label_9.setText(_translate("GasComb", "Specific Heat [J/kg-K]"))
         self.lineEdit_cp.setText(_translate("GasComb", "0"))
+        
+        self.label_fl.setText(_translate("GasComb", "Flame Speed [m/s]"))
+        self.lineEdit_FlSp.setText(_translate("GasComb", "0"))
+        # self.pushButtonCalcFlame.setText(_translate("GasComb", "Calc"))
+        
         self.label_15.setText(_translate("GasComb", "Thermal Conductivity [W/m-K]"))
         self.lineEdit_conduct.setText(_translate("GasComb", "0"))
         self.label_6.setText(_translate("GasComb", "Species"))
@@ -551,11 +574,13 @@ class Ui_GasComb(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_Ref), _translate("GasComb", "Reference O2"))
         self.pushButtonCalculate.setText(_translate("GasComb", "Calculate"))
         self.menuFile.setTitle(_translate("GasComb", "File"))
+        self.menuSettings.setTitle(_translate("GasComb", "Settings"))
         self.menuHelp.setTitle(_translate("GasComb", "Help"))
         self.actionOpen.setText(_translate("GasComb", "Open ..."))
         self.actionSave.setText(_translate("GasComb", "Save"))
         self.actionSave_as.setText(_translate("GasComb", "Save as ..."))
         self.actionClose.setText(_translate("GasComb", "Close"))
+        self.actionOptions.setText(_translate("GasComb", "Options ..."))
         self.actionAbout.setText(_translate("GasComb", "About"))
 
 

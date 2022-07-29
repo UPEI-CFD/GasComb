@@ -491,6 +491,23 @@
             </property>
            </widget>
           </item>
+		  <item row="8" column="0">
+           <widget class="QLabel" name="label_fl">
+            <property name="text">
+             <string>Flame Speed [m/s]</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="1">
+           <widget class="QLineEdit" name="lineEdit_FlSp">
+            <property name="text">
+             <string>0</string>
+            </property>
+            <property name="readOnly">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>
