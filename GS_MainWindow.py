@@ -415,9 +415,10 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
     def calculateButtonClicked(self):
         """Do all the calculation and print results."""
         spaliny = self.evalInButtonClicked()
-        t_in, p_in, x_in = spaliny.TPX
         if not spaliny:
             return
+        t_in, p_in, x_in = spaliny.TPX
+        
         # Get data from user's inputs
         mechFile = self.comboBoxMechFile.currentText()
 
