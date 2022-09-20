@@ -140,13 +140,14 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
         if self.settings.contains("fs_width"):
             self.fs_enabled = self.valueToBool(
                 self.settings.value("fs_enabled"))
-            self.fs_ratio = self.settings.value("fs_ratio")
-            self.fs_slope = self.settings.value("fs_slope")
-            self.fs_curve = self.settings.value("fs_curve")
-            self.fs_loglevel = self.settings.value("fs_loglevel")
+            self.fs_ratio = float(self.settings.value("fs_ratio"))
+            self.fs_slope = float(self.settings.value("fs_slope"))
+            self.fs_curve = float(self.settings.value("fs_curve"))
+            self.fs_loglevel = int(self.settings.value("fs_loglevel"))
             self.fs_auto = self.valueToBool(self.settings.value("fs_auto"))
-            self.fs_width = self.settings.value("fs_width")
+            self.fs_width = float(self.settings.value("fs_width"))
             self.equil = self.settings.value("equil")
+        print("Typ promenych:", type(self.fs_ratio), type(self.fs_slope), type(self.fs_width))
 
     def center(self):
         """
@@ -916,6 +917,7 @@ class Worker(QObject):
     def run(self):
         """Long-running task."""
         self.start.emit()
+        print ("Debug:", self.width)
         flame_speed = pySpal.getFlameSpeed(
             self.gas1, self.ratio, self.slope, self.curve, self.loglevel, self.width, self.auto)
         #flame_speed = pySpal.getFlameSpeed(self.gas1)
