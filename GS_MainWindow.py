@@ -612,8 +612,10 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
             QMessageBox.warning(
                 self, "Error", "Wrong input. It has to be a number.")
             return
+        
+
         QMessageBox.information(self, "Information", "Assumes that the first stream is \
-oxydizer and other streams are fuels.")
+                                 oxydizer and other streams are fuels.")
         spaliny = ""
         streams = []
         mechFile = self.comboBoxMechFile.currentText()
@@ -638,11 +640,12 @@ oxydizer and other streams are fuels.")
                     tw.item(row, 1).text())
 
             # Set the cantera object of the first gas stream
-            # TODO Check if Multi option exists for other mechanism files
+            # Check if Multi option exists for other mechanism files
             try:
                 gas1 = pySpal.ct.Solution(mechFile, transport_model='Multi')
                 self.transport = True
             except ct.CanteraError as err:
+                "When there is no Multi option in mechanism file:"
                 print(err)
                 gas1 = pySpal.ct.Solution(mechFile, name="gas")
                 self.transport = False
@@ -918,8 +921,16 @@ class Worker(QObject):
         """Long-running task."""
         self.start.emit()
         print ("Debug:", self.width)
-        flame_speed = pySpal.getFlameSpeed(
-            self.gas1, self.ratio, self.slope, self.curve, self.loglevel, self.width, self.auto)
+        try:
+            flame_speed = pySpal.getFlameSpeed(
+                self.gas1, self.ratio, self.slope, self.curve, self.loglevel, self.width, self.auto)
+        except ct.CanteraError as err:
+            print(err)
+            print("Stopping flame speed calculation! Change inputs or Settings of flame speed calculation.")
+            # QMessageBox.warning(self, "Error", "{0}\n{1}".format(
+            #     err, "Stopping flame speed calculation!\nChange inputs or Settings of flame speed calculation."))
+            flame_speed=-1
+        
         #flame_speed = pySpal.getFlameSpeed(self.gas1)
         # self.progress.emit(i + 1)
         self.finished.emit(flame_speed)

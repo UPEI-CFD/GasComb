@@ -173,7 +173,7 @@ class TabPageStream(QWidget):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        #MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.groupBox_6.setTitle(_translate("MainWindow", "Inputs"))
         self.comboBoxFlow1.setItemText(0, _translate(
             "MainWindow", "Mass Flow Rate [kg/s]"))
