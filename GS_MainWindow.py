@@ -419,6 +419,8 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
         if not spaliny:
             return
         t_in, p_in, x_in = spaliny.TPX
+        h_in = spaliny.enthalpy #Enthalpy of unburnt mixture
+        gas1 = copy.copy(spaliny) #For thermal power calculation
         
         # Get data from user's inputs
         mechFile = self.comboBoxMechFile.currentText()
@@ -454,6 +456,9 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
 
         try:
             spaliny.equilibrate(self.equil)
+            
+            #To get power of combustion I need this constant temperature and variable enthalpy.
+            gas1.equilibrate("TP")
         except ct.CanteraError as err:
             print(err)
             print("Stopping calculation - correct the error and run again!")
@@ -473,6 +478,12 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
         else:
             self.lineEdit_visc.setText("-")
             self.lineEdit_conduct.setText("-")
+        
+        #TODO Check why it is negative!
+        c_power = gas1.enthalpy-h_in      #Thermal power of combustion [W]
+        self.lineEdit_power.setText("{:.4f}".format(abs(c_power)/1000))
+        #h_comb = c_power/spaliny.mass # Heat of combustion [J/kg]
+        # print("Thermal power of combustion:", c_power, h_in, "[W]")
 
         # Table Real
         self.tableWidget_Real.setRowCount(0)
@@ -572,6 +583,9 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
         else:
             self.lineEdit_FlSp.setText("Disabled in Settings")
             self.lineEdit_FlSp.setEnabled(False)
+
+        
+
 
     def on_flame_start(self):
         """ Set status bar text and progressbar pulsating bar. """

@@ -217,6 +217,7 @@ class Ui_GasComb(object):
         self.lineEdit_visc.setReadOnly(True)
         self.lineEdit_visc.setObjectName("lineEdit_visc")
         self.formLayout.setWidget(5, QtWidgets.QFormLayout.FieldRole, self.lineEdit_visc)
+        
         self.label_9 = QtWidgets.QLabel(self.groupBox_5)
         self.label_9.setObjectName("label_9")
         self.formLayout.setWidget(6, QtWidgets.QFormLayout.LabelRole, self.label_9)
@@ -224,6 +225,7 @@ class Ui_GasComb(object):
         self.lineEdit_cp.setReadOnly(True)
         self.lineEdit_cp.setObjectName("lineEdit_cp")
         self.formLayout.setWidget(6, QtWidgets.QFormLayout.FieldRole, self.lineEdit_cp)
+        
         self.label_15 = QtWidgets.QLabel(self.groupBox_5)
         self.label_15.setObjectName("label_15")
         self.formLayout.setWidget(7, QtWidgets.QFormLayout.LabelRole, self.label_15)
@@ -233,14 +235,24 @@ class Ui_GasComb(object):
         self.formLayout.setWidget(7, QtWidgets.QFormLayout.FieldRole, self.lineEdit_conduct)
         
         
+        
+        self.label_pow = QtWidgets.QLabel(self.groupBox_5)
+        self.label_pow.setObjectName("label_15")
+        self.formLayout.setWidget(8, QtWidgets.QFormLayout.LabelRole, self.label_pow)
+        self.lineEdit_power = QtWidgets.QLineEdit(self.groupBox_5)
+        self.lineEdit_power.setReadOnly(True)
+        self.lineEdit_power.setObjectName("lineEdit_power")
+        self.formLayout.setWidget(8, QtWidgets.QFormLayout.FieldRole, self.lineEdit_power)
+        
+        
+        
         self.label_fl = QtWidgets.QLabel(self.groupBox_5)
         self.label_fl.setObjectName("label_fl")
-        self.formLayout.setWidget(8, QtWidgets.QFormLayout.LabelRole, self.label_fl)
-        
+        self.formLayout.setWidget(9, QtWidgets.QFormLayout.LabelRole, self.label_fl)
         self.lineEdit_FlSp = QtWidgets.QLineEdit(self.groupBox_5)
         self.lineEdit_FlSp.setReadOnly(True)
         self.lineEdit_FlSp.setObjectName("lineEdit_FlSp")
-        self.formLayout.setWidget(8, QtWidgets.QFormLayout.FieldRole, self.lineEdit_FlSp)
+        self.formLayout.setWidget(9, QtWidgets.QFormLayout.FieldRole, self.lineEdit_FlSp)
         
         
         self.verticalLayout_2.addWidget(self.groupBox_5)
@@ -539,6 +551,9 @@ class Ui_GasComb(object):
         
         self.label_15.setText(_translate("GasComb", "Thermal Conductivity [W/m-K]"))
         self.lineEdit_conduct.setText(_translate("GasComb", "0"))
+        self.label_pow.setText(_translate("GasComb", "Thermal Power [kW]"))
+        self.lineEdit_power.setText(_translate("GasComb", "0"))
+        
         self.label_6.setText(_translate("GasComb", "Species"))
         self.tableWidget_Real.setSortingEnabled(True)
         item = self.tableWidget_Real.verticalHeaderItem(0)
