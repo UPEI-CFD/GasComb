@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Settings(object):
     def setupUi(self, Settings):
         Settings.setObjectName("Settings")
-        Settings.resize(400, 339)
+        Settings.resize(400, 300)
         Settings.setLayoutDirection(QtCore.Qt.LeftToRight)
         self.verticalLayout = QtWidgets.QVBoxLayout(Settings)
         self.verticalLayout.setObjectName("verticalLayout")
@@ -95,9 +95,6 @@ class Ui_Settings(object):
         self.comboBox_equilibrate.addItem("")
         self.formLayout_2.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.comboBox_equilibrate)
         self.verticalLayout_3.addLayout(self.formLayout_2)
-        self.checkBox_complet_comb = QtWidgets.QCheckBox(self.groupBox_2)
-        self.checkBox_complet_comb.setObjectName("checkBox_complet_comb")
-        self.verticalLayout_3.addWidget(self.checkBox_complet_comb)
         self.verticalLayout.addWidget(self.groupBox_2)
         self.buttonBox = QtWidgets.QDialogButtonBox(Settings)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
@@ -133,6 +130,4 @@ class Ui_Settings(object):
         self.comboBox_equilibrate.setItemText(1, _translate("Settings", "UV"))
         self.comboBox_equilibrate.setItemText(2, _translate("Settings", "SV"))
         self.comboBox_equilibrate.setItemText(3, _translate("Settings", "SP"))
-        self.checkBox_complet_comb.setToolTip(_translate("Settings", "Specify if complete or incomplete combustion should be used."))
-        self.checkBox_complet_comb.setText(_translate("Settings", "Complete combustion"))
 

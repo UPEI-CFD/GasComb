@@ -98,7 +98,10 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
         self.fs_width = 0.1
 
         # Settings for Cantera equilibrate function
-        self.eqil = "HP"
+        self.equil = "HP"
+        
+        # Settings for Cantera Complete combustion model
+        self.complete_comb = False
 
         # Load Settings data from registry
         self.load_settings()
@@ -115,18 +118,20 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
     #     if action == quitAction:
     #         QtWidgets.qApp.quit()
 
-    def closeEvent(self, event):
-        """
-        Saves Settings/Options... to values stored in registry via QSettings.
-        """
-        self.settings.setValue("fs_enabled", self.fs_enabled)
-        self.settings.setValue("fs_ratio", self.fs_ratio)
-        self.settings.setValue("fs_slope", self.fs_slope)
-        self.settings.setValue("fs_curve", self.fs_curve)
-        self.settings.setValue("fs_loglevel", self.fs_loglevel)
-        self.settings.setValue("fs_auto", self.fs_auto)
-        self.settings.setValue("fs_width", self.fs_width)
-        self.settings.setValue("equil", self.equil)
+
+    #Moved to SettingsDlg -> acceptSettingsClicked
+    # def closeEvent(self, event):
+    #     """
+    #     Saves Settings/Options... to values stored in registry via QSettings.
+    #     """
+    #     self.settings.setValue("fs_enabled", self.fs_enabled)
+    #     self.settings.setValue("fs_ratio", self.fs_ratio)
+    #     self.settings.setValue("fs_slope", self.fs_slope)
+    #     self.settings.setValue("fs_curve", self.fs_curve)
+    #     self.settings.setValue("fs_loglevel", self.fs_loglevel)
+    #     self.settings.setValue("fs_auto", self.fs_auto)
+    #     self.settings.setValue("fs_width", self.fs_width)
+    #     self.settings.setValue("equil", self.equil)
 
     @staticmethod
     def valueToBool(value):
@@ -147,7 +152,8 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
             self.fs_auto = self.valueToBool(self.settings.value("fs_auto"))
             self.fs_width = float(self.settings.value("fs_width"))
             self.equil = self.settings.value("equil")
-        print("Typ promenych:", type(self.fs_ratio), type(self.fs_slope), type(self.fs_width))
+            self.complete_comb = self.valueToBool(self.settings.value("complete_comb")) 
+        # print("Typ promenych:", type(self.fs_ratio), type(self.fs_slope), type(self.fs_width))
 
     def center(self):
         """
@@ -455,7 +461,33 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
         # ------------
 
         try:
+            if self.complete_comb:
+                #If defined Complete combustion in settings:
+                complete_species, X = pySpal.get_main_species(spaliny)
+                # print(complete_species)
+                gas2 = ct.Solution(thermo="IdealGas", species=complete_species)
+                T = spaliny.T
+                P = spaliny.P
+                hm = spaliny.mass
+                spaliny.equilibrate(self.equil)
+                
+                #IdeailGas has no such a properties (?)
+                if self.transport:
+                    viscosity = spaliny.viscosity
+                    conductivity = spaliny.thermal_conductivity
+                
+                spaliny = pySpal.ct.Quantity(gas2, constant='HP')
+                spaliny.TPX = T,P,X
+                spaliny.mass = hm
+                gas1 = copy.copy(spaliny) #For thermal power calculation
+                
             spaliny.equilibrate(self.equil)
+            
+            if not self.complete_comb:
+                #IdeailGas has no such a properties (?)
+                if self.transport:
+                    viscosity = spaliny.viscosity
+                    conductivity = spaliny.thermal_conductivity
             
             #To get power of combustion I need this constant temperature and variable enthalpy.
             gas1.equilibrate("TP")
@@ -472,9 +504,9 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
         self.lineEdit_density.setText("{:.4f}".format(spaliny.density))
         self.lineEdit_cp.setText("{:.2f}".format(spaliny.cp))
         if self.transport:
-            self.lineEdit_visc.setText("{:.4g}".format(spaliny.viscosity))
+            self.lineEdit_visc.setText("{:.4g}".format(viscosity))#format(spaliny.viscosity))
             self.lineEdit_conduct.setText(
-                "{:.4f}".format(spaliny.thermal_conductivity))
+                "{:.4f}".format(conductivity)) #format(spaliny.thermal_conductivity))
         else:
             self.lineEdit_visc.setText("-")
             self.lineEdit_conduct.setText("-")
@@ -747,6 +779,7 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
                     QMessageBox.warning(self, "Error", "{0}\n{1}".format(
                         err, "Stopping calculation - correct the error and run again!"))
                     return
+                
                 spaliny = pySpal.ct.Quantity(gas1, constant='HP')
 
                 if t.comboBoxFlow1.currentText() == "Mass Flow Rate [kg/s]":
@@ -770,6 +803,24 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
                         self, "Error", "No species specified for a Stream!\nSpecify species in all Streams and run again.")
                     return
 
+                # #----When is selected Complete combustion model in Settings:
+                # if self.complete_comb:
+                #     try:
+                #         species = {S.name: S for S in ct.Species.listFromFile(mechFile)}
+                #         complete_species = [species[S] for S in spe_conc.keys()]
+                #         gas1 = ct.Solution(thermo="IdealGas", species=complete_species)
+                #         print("Jedu11")
+                #         self.fs_enabled = True
+                #     except ct.CanteraError as err:
+                #         self.complete_comb = False
+                #         print(err)
+                #         print('Switching off "Complete combustion"! Incomplete combustion used instead.')
+                #         QMessageBox.warning(
+                #             self, "Warning", 'Switching off "Complete combustion"!\nIncomplete combustion used instead.')
+                # #----end: Complete combustion settings
+                
+                # if not self.complete_comb:
+                    # print("Neměl bych jet!")
                 try:
                     gas1 = pySpal.ct.Solution(
                         mechFile, transport_model='Multi')
@@ -972,6 +1023,7 @@ class SettingsDlg(QDialog):
             self.parent.equil, QtCore.Qt.MatchFixedString)
         if index >= 0:
             self.ui.comboBox_equilibrate.setCurrentIndex(index)
+        self.ui.checkBox_complet_comb.setChecked(parent.complete_comb) 
 
     def acceptSettingsClicked(self):
         """ Load choices from dialog to class variables. """
@@ -984,5 +1036,20 @@ class SettingsDlg(QDialog):
         self.parent.fs_auto = self.ui.checkBox_auto.isChecked()
 
         self.parent.equil = self.ui.comboBox_equilibrate.currentText()
+        self.parent.complete_comb = self.ui.checkBox_complet_comb.isChecked()
+        
+        
+        """
+        Saves Settings/Options... to values stored in registry via QSettings.
+        """
+        self.parent.settings.setValue("fs_enabled", self.parent.fs_enabled)
+        self.parent.settings.setValue("fs_ratio", self.parent.fs_ratio)
+        self.parent.settings.setValue("fs_slope", self.parent.fs_slope)
+        self.parent.settings.setValue("fs_curve", self.parent.fs_curve)
+        self.parent.settings.setValue("fs_loglevel", self.parent.fs_loglevel)
+        self.parent.settings.setValue("fs_auto", self.parent.fs_auto)
+        self.parent.settings.setValue("fs_width", self.parent.fs_width)
+        self.parent.settings.setValue("equil", self.parent.equil) 
+        self.parent.settings.setValue("complete_comb", self.parent.complete_comb)
 
         self.close()

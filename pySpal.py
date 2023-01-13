@@ -191,6 +191,15 @@ def getFlameSpeed(gas1, ratio=2, slope=0.1, curve=0.1,loglevel=1, width=0.1, aut
     # print("Rychlost plamene je: {:.2f} cm/s".format(Rychlost_plamene*100))
     return flame.velocity[0]
 
+def get_main_species(spaliny):
+    sp_arg = ct.np.argwhere(spaliny.X>1e-6)
+    sp = ct.np.array(spaliny.species())[sp_arg].flatten()
+    X = spaliny.X[sp_arg].flatten()
+    return list(sp),X
+
+
+
+
 license_description="""<p>GasComb v{}</p>
 <p>GasComb is a basic GUI for Cantera libraries and few more tools. It allows calculations of stream mixing and set the gas mixture to a state of chemical equilibrium. Mixing is assumed at constant enthalpy and pressure (HP).</p>
 
