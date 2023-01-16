@@ -16,8 +16,11 @@ My goal besides the reactions were also material properties of gases. It is ofte
 ... all pressure and temperature dependent.
 
 ## Download
-- Standard windows installation: https://drive.google.com/file/d/15tGtBE_3ZSRW9ij46dIhk3_zTZB3llAI/view?usp=sharing
-- Portable windows installation: https://drive.google.com/file/d/1URL34bUeanLsE6DjKn7XQ6TAMLdKp92N/view?usp=sharing
+For download of latest version visit: https://sites.google.com/vutbr.cz/gascomb
+
+Link for an older version:
+- Standard windows installation: https://drive.google.com/file/d/1qUGXpPAM9UXHhirYSjDXoUlqa7aiODEa/view?usp=sharing
+- Portable windows installation: https://drive.google.com/file/d/1akHrIuTFRr28-0pYWFIa8xLVTtx8Eeew/view?usp=sharing
 
 ## How to install and run with Python from source code
 1) Download and install Miniconda: https://docs.conda.io/en/latest/miniconda.html 
