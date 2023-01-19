@@ -179,9 +179,9 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
         # self.acceptSettings.triggered.connect(self.dialogSettings)
 
     @staticmethod
-    def VolFr_state_changed(self, t):
+    def VolFr_state_changed(t):
         """
-        When changed chek box option: Volume Fraction x Mass Fraction adjust header of Table with species
+        When changed check box option: Volume Fraction x Mass Fraction adjust header of Table with species
 
         Parameters
         ----------
