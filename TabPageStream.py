@@ -131,7 +131,7 @@ class TabPageStream(QWidget):
 
     def airButtonClicked(self):
         mechFile = self.parent.comboBoxMechFile.currentText()
-        spes = [n.name for n in pySpal.ct.Species.listFromFile(mechFile)]
+        spes = [n.name for n in pySpal.ct.Species.list_from_file(mechFile)]
         
         # Clear old rows
         self.tableWidget_In1.setRowCount(0)

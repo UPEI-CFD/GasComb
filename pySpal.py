@@ -66,6 +66,11 @@ def set_water_phi(gas, water_phi):
     '''
     w = ct.Water()
     t, p = gas.TP
+    if t >= w.critical_temperature:
+        print(f"Warning: Temperature {t:.2f} K exceeds water critical temperature "
+              f"({w.critical_temperature:.2f} K). Relative humidity is not applicable. "
+              "Skipping humidity adjustment.")
+        return
     w.TP = gas.TP
     p_sat = w.P_sat
     water_Y = 0.622*water_phi*p_sat/(gas.P-water_phi*p_sat)

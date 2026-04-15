@@ -24,7 +24,7 @@ class UI_SpeDlg(QDialog, Ui_SpeciesDialog):
         if fnm in purefluids:
             spe_in = [fnm]
         else:
-            spe_in = [n.name for n in pySpal.ct.Species.listFromFile(fnm)]
+            spe_in = [n.name for n in pySpal.ct.Species.list_from_file(fnm)]
         self.ui.listWidget_all.addItems(spe_in)
         self.parent = parent
         self.fnm = fnm

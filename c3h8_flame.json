@@ -1,0 +1,32 @@
+[
+  {
+    "mechanismFile": "gri30.yaml",
+    "lambda": "1.1630646130299664",
+    "refO2": "0"
+  },
+  {
+    "t1": 283.15,
+    "mf1": 18.0,
+    "p1": 101325.0,
+    "rh": 0.0,
+    "rows_no": 4,
+    "volumeFractionChecked": true,
+    "species": {
+      "O2": 0.2115,
+      "N2": 0.7882,
+      "CO2": 0.0003,
+      "H2O": 0.0
+    }
+  },
+  {
+    "t1": 283.15,
+    "mf1": 1.0,
+    "p1": 101325.0,
+    "rh": 0.0,
+    "rows_no": 1,
+    "volumeFractionChecked": true,
+    "species": {
+      "C3H8": 1.0
+    }
+  }
+]

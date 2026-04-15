@@ -378,7 +378,7 @@ class GS_MainWindow(QMainWindow, Ui_GasComb):
     def airButtonClicked(self):
         """Preset species to composition of Air and put it to table."""
         mechFile = self.comboBoxMechFile.currentText()
-        spes = [n.name for n in pySpal.ct.Species.listFromFile(mechFile)]
+        spes = [n.name for n in pySpal.ct.Species.list_from_file(mechFile)]
 
         # Clear old rows
         self.tableWidget_In1.setRowCount(0)
